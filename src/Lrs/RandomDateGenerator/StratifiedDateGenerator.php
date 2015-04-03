@@ -32,26 +32,28 @@ class StratifiedDateGenerator {
 	
 	public $count;
 	public $dates;
-	public $default_params;
+	public $defaultParams;
 	public $maxYear = 2038;
 	public $minYear = 1970;
 	public $msg;
 	public $params;
 	public $yearRange;
 	
-	public function __construct($params = []) {
+	public function __construct($params = array()) {
 		$this->reset();
 		$this->params($params);
 	}
 
 	public function daysOfTheWeek()  {
-		return ['7' => 'Sunday',
-				'1' => 'Monday',
-				'2' => 'Tuesday',
-				'3' => 'Wednesday',
-				'4' => 'Thursday',
-				'5' => 'Friday',
-				'6' => 'Saturday'];
+		return array(
+			'7' => 'Sunday',
+			'1' => 'Monday',
+			'2' => 'Tuesday',
+			'3' => 'Wednesday',
+			'4' => 'Thursday',
+			'5' => 'Friday',
+			'6' => 'Saturday'
+		);
 	}
 
 	public function generate($params = false) {
@@ -72,41 +74,43 @@ class StratifiedDateGenerator {
 						break;	
 					}
 					// Grab a date off the front of the randomized array of dates
-					$this_date = $unix = array_shift($this->yearRange);
+					$thisDate = $unix = array_shift($this->yearRange);
 					// We need at least quarter, day, and month to evaluate whether to proceed
-					$this_date = ['quarter'	=> ceil(date('n', $this_date)/3),
-								  'day'		=> date('N', $this_date),
-								  'month'	=> date('n', $this_date)];
+					$thisDate = array(
+						'quarter'	=> ceil(date('n', $thisDate)/3),
+						'day'		=> date('N', $thisDate),
+						'month'		=> date('n', $thisDate)
+					);
 					/////
 					// Note the deliberate way that each skip is checked.  Checking them 
 					// in order of breadth (from wide to narrow) reduces the number of 
 					// checks that might need to take place.
 					/////
 					// Is the limit reached on this quarter?
-					$skip_quarter = $this->params['lim_quarters'] && $this->count['quarters'][$this_date['quarter']] >= $this->params['lim_quarters'];
-					if ($skip_quarter ) {
+					$skipQuarter = $this->params['lim_quarters'] && $this->count['quarters'][$thisDate['quarter']] >= $this->params['lim_quarters'];
+					if ( $skipQuarter ) {
 						continue;	
 					}
 					// Is the limit reached on this month?
-					$skip_month = $this->params['lim_months'] && $this->count['months'][$this_date['month']] >= $this->params['lim_months'];
-					if ( $skip_month ) {
+					$skipMonth = $this->params['lim_months'] && $this->count['months'][$thisDate['month']] >= $this->params['lim_months'];
+					if ( $skipMonth ) {
 						continue;	
 					}
 					// Is the limit reached on this day of the week?
-					$skip_day = ( $this->params['lim_days'] && $this->count['days'][$this_date['day']] >= $this->params['lim_days'] ) || ( sizeof($this->params['exclude']) > 0 && in_array($this_date['day'], $this->params['exclude']) );
-					if ( $skip_day ) {
+					$skipDay = ( $this->params['lim_days'] && $this->count['days'][$thisDate['day']] >= $this->params['lim_days'] ) || ( sizeof($this->params['exclude']) > 0 && in_array($thisDate['day'], $this->params['exclude']) );
+					if ( $skipDay ) {
 						continue;
 					}
 					// Increment day, month, quarter counts
-					$this->count['days'][$this_date['day']]++;
-					$this->count['months'][$this_date['month']]++;
-					$this->count['quarters'][$this_date['quarter']]++;
+					$this->count['days'][$thisDate['day']]++;
+					$this->count['months'][$thisDate['month']]++;
+					$this->count['quarters'][$thisDate['quarter']]++;
 					// If we made it this far we can use the date, so store a couple of extra values...
-					$this_date['db'] = date('Y-m-d', $unix);
-					$this_date['long'] = date('l, F jS, Y', $unix);
-					$this_date['unix'] = $unix;
+					$thisDate['db'] = date('Y-m-d', $unix);
+					$thisDate['long'] = date('l, F jS, Y', $unix);
+					$thisDate['unix'] = $unix;
 					// ...record the date...
-					$this->dates[$this_date['db']] = $this_date;
+					$this->dates[$thisDate['db']] = $thisDate;
 					// ...and end the loop
 					$searching = false;
 				}
@@ -145,7 +149,7 @@ class StratifiedDateGenerator {
 		if ( !is_array($params) ) {
 			parse_str($params, $params);
 		}
-		$this->params = array_merge($this->default_params, $params);
+		$this->params = array_merge($this->defaultParams, $params);
 		// Limit to UNIX years
 		if ($this->params['year'] <  $this->minYear || $this->params['year'] >  $this->maxYear ) {
 			$this->params['year'] = date('Y', time());
@@ -188,19 +192,22 @@ class StratifiedDateGenerator {
 	}
 
 	public function reset() {
-		$this->count = ['days' 		=> array_fill_keys(array_keys($this->daysOfTheWeek()), 0),
-						'months'	=> array_fill_keys(range(1, 12), 0),
-						'quarters'	=> array_fill_keys(range(1,4), 0)];
-		$this->dates = [];
-		$this->default_params = ['id'			=> false,
-								 'year' 		=> date('Y', time()),
-								 'num_dates'	=> 24,
-								 'exclude'		=> [],
-								 'lim_days'		=> false,
-								 'lim_months'	=> false,
-								 'lim_quarters'	=> false];
-		$this->msg = [];
-		$this->yearRange = [];
+		$this->count = array(
+			'days' 		=> array_fill_keys(array_keys($this->daysOfTheWeek()), 0),
+			'months'	=> array_fill_keys(range(1, 12), 0),
+			'quarters'	=> array_fill_keys(range(1,4), 0)
+		);
+		$this->dates = array();
+		$this->defaultParams = array(
+			'id'			=> false,
+			'year' 			=> date('Y', time()),
+			'num_dates'		=> 24,
+			'exclude'		=> array(),
+			'lim_days'		=> false,
+			'lim_months'	=> false,
+			'lim_quarters'	=> false
+		);
+		$this->msg = $this->yearRange = array();
 		return $this;
 	}
 	
